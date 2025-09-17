@@ -7,38 +7,52 @@ from torch.utils.data import TensorDataset, DataLoader
 import matplotlib.pyplot as plt
 
 from models.Autoencoder import Conv1DDenoiser
+from models.AdaptiveFilter import DenoiseNet
 from utils import generate_data
 
-model = Conv1DDenoiser()
-dataset = 'autoencoder'
-graph_name = 'autoencoder'
-model_name = "autoencoder"
+global_name = 'adaptive_filter'
 
-if not os.path.exists(f'dataset/{dataset}'):
-    os.makedirs(f'dataset/{dataset}', exist_ok=True)
+# dataset = global_name
+graph_name = global_name
+model_name = global_name
 
-x_train, s_train = generate_data(100000)
+# if not os.path.exists(f'dataset/{dataset}'):
+#     os.makedirs(f'dataset/{dataset}', exist_ok=True)
+
+x_train, s_train = generate_data(10000)
 x_test, s_test = generate_data(300)
 
-window = 1024  # example window length
-stride = 512
-segments = []
-targets = []
-for start in range(0, len(x_train)-window, stride):
-    segments.append(x_train[start:start+window])
-    targets.append(s_train[start:start+window])
+if global_name != 'adaptive_filter':
+    model = Conv1DDenoiser()
 
-x_train_t = torch.tensor(segments, dtype=torch.float32).unsqueeze(1)  # [N, 1, window]
-s_train_t = torch.tensor(targets, dtype=torch.float32).unsqueeze(1)
+    window = 1024  # example window length
+    stride = 512
+    segments = []
+    targets = []
+    for start in range(0, len(x_train)-window, stride):
+        segments.append(x_train[start:start+window])
+        targets.append(s_train[start:start+window])
 
-t_segments = []
-t_segments.append(x_test)
-t_targets = []
-t_targets.append(s_test)
+    x_train_t = torch.tensor(segments, dtype=torch.float32).unsqueeze(1)  # [N, 1, window]
+    s_train_t = torch.tensor(targets, dtype=torch.float32).unsqueeze(1)
 
-# format to models standard
-x_test_t = torch.tensor(t_segments, dtype=torch.float32).unsqueeze(1)
-s_test_t = torch.tensor(t_targets, dtype=torch.float32).unsqueeze(1) 
+    t_segments = []
+    t_segments.append(x_test) # make a batch out of the tensor
+    t_targets = []
+    t_targets.append(s_test)
+
+    # format to models standard
+    x_test_t = torch.tensor(t_segments, dtype=torch.float32).unsqueeze(1)
+    s_test_t = torch.tensor(t_targets, dtype=torch.float32).unsqueeze(1) 
+else:
+    model = DenoiseNet() 
+
+    # Convert to torch tensors, shape [N,1]
+    x_train_t = torch.tensor(x_train, dtype=torch.float32).unsqueeze(1)
+    s_train_t = torch.tensor(s_train, dtype=torch.float32).unsqueeze(1)
+    x_test_t  = torch.tensor(x_test,  dtype=torch.float32).unsqueeze(1)
+    s_test_t  = torch.tensor(s_test,  dtype=torch.float32).unsqueeze(1)
+
 
 train_ds = TensorDataset(x_train_t, s_train_t)
 train_loader = DataLoader(train_ds, batch_size=32, shuffle=True)
