@@ -55,7 +55,7 @@ else:
 
 
 train_ds = TensorDataset(x_train_t, s_train_t)
-train_loader = DataLoader(train_ds, batch_size=32, shuffle=True)
+train_loader = DataLoader(train_ds, batch_size=32, shuffle=True) #TODO: maybe this is problematic
 
 
 # --- Loss & optimizer ---
