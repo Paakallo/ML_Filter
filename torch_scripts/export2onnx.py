@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-from models.Autoencoder import Conv1DDenoiser
+from models.Autoencoder_torch import Conv1DDenoiser
 
 model_name = "adaptive_filter"
 

@@ -6,7 +6,7 @@ import torch.optim as optim
 from torch.utils.data import TensorDataset, DataLoader
 import matplotlib.pyplot as plt
 
-from models.Autoencoder import Conv1DDenoiser
+from models.Autoencoder_torch import Conv1DDenoiser
 from models.AdaptiveFilter import DenoiseNet
 from utils import generate_data
 
