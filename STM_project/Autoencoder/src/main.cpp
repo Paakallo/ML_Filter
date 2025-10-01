@@ -85,26 +85,35 @@ int main(void) {
     int n_samples = 1000;
     float noise_factor = 0.5;
 
+    float x[n_samples];
+    float s[n_samples];
     while (1) {
+            uint32_t win_start = HAL_GetTick(); 
+            // generate data window
+            for (int i = 0; i < n_samples; i++){
+                float u1 = (rand() + 1.0) / (RAND_MAX + 1.0);
+                float u2 = (rand() + 1.0) / (RAND_MAX + 1.0);
+                float g_num = sqrt(-2.0 * log(u1)) * cos(2.0 * M_PI * u2);
+                
+                float t = (float)i / (n_samples - 1);
+                s[i] = sin(2.0 * M_PI * t);
+                float n = noise_factor * g_num;
+                x[i] = s[i] + n; 
+            
 
-            // wrong inputs
-            float *x = (float*)malloc(n_samples * sizeof(float));
-            float *s = (float*)malloc(n_samples * sizeof(float));
+                uint32_t start_ms = HAL_GetTick();
 
-            generate_data(n_samples, noise_factor, x, s);
+                input->data.f[0] = x[i];
 
-            uint32_t start_ms = HAL_GetTick();
-
-            input->data.f[0] = *x;
-
-            if (interpreter->Invoke() != kTfLiteOk) {
-                UART_printf("Failed to invoke for (%d)", x);
-                continue;
+                if (interpreter->Invoke() != kTfLiteOk) {
+                    UART_printf("Failed to invoke for (%d)", x);
+                    continue;
+                }
+                float y = output->data.f[0];
+                uint32_t inf_time = (uint32_t)HAL_GetTick() - start_ms;
+                UART_printf("Restored value:", y, inf_time);
             }
-            float y = output->data.f[0];
-            uint32_t inf_time = (uint32_t)HAL_GetTick() - start_ms;
-            UART_printf("Restored value:", y, inf_time);
-            free(x);
-            free(s);
-    }
+            uint32_t win_stop = (uint32_t)HAL_GetTick() - win_start;
+            UART_printf("Window inference time: ", win_stop);
+        }
 }

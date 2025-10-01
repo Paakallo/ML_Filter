@@ -214,3 +214,5 @@ quantizations/
 temp/
 
 tflite-micro/
+
+*.tflite
