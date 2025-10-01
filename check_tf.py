@@ -1,6 +1,11 @@
 import tensorflow as tf
 
-interpreter = tf.lite.Interpreter(model_path="autoencoder_filter.tflite")
+interpreter = tf.lite.Interpreter(model_path="neural_filter.tflite")
 interpreter.allocate_tensors()
 for tensor in interpreter.get_tensor_details():
-    print(tensor['name'])
+    print(tensor['name'], '\n')
+
+print('Printing ops \n')
+
+for op_detail in interpreter._get_ops_details():
+    print(op_detail['op_name'], '\n')

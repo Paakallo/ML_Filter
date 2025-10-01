@@ -2,7 +2,7 @@
 
 #define PI                  2.f * 3.14159265359f
 
-#define TENSOR_ARENA_SIZE   2 * 1024
+#define TENSOR_ARENA_SIZE   60 * 1024
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -16,7 +16,7 @@
 #include "tensorflow/lite/micro/micro_mutable_op_resolver.h"
 
 // To get the model 
-#include "autoencoder_filter.h"
+#include "neural_filter.h"
 char c_str[100];
 
 // generate data libraries
@@ -55,7 +55,7 @@ int main(void) {
     init_UART2();
     init_TIM2();
 
-    const tflite::Model* model = tflite::GetModel(autoencoder_filter);
+    const tflite::Model* model = tflite::GetModel(neural_filter);
     if (model->version() != TFLITE_SCHEMA_VERSION) {
         UART_printf("The model version of %d does not match the version of the schema of version %d", model->version(), TFLITE_SCHEMA_VERSION);
     }
@@ -67,14 +67,6 @@ int main(void) {
         UART_printf("Failed to add all the ops.");
         return -1;
     }
-
-
-    // resolver.AddConv2D();   // Conv1D often implemented as 2D conv
-    // resolver.AddAdd();      // BiasAdd
-    // resolver.AddReshape();  // ExpandDims / Squeeze
-    // resolver.AddRelu();     // Relu activation
-    // resolver.AddQuantize(); // if int8
-    // resolver.AddDequantize();
 
     // Keep aligned to 16 bytes for CMSIS
     alignas(16) uint8_t tensor_arena[TENSOR_ARENA_SIZE];
@@ -93,23 +85,16 @@ int main(void) {
     int n_samples = 1000;
     float noise_factor = 0.5;
 
-    // double *x = malloc(n_samples * sizeof(double));
-    // double *s = malloc(n_samples * sizeof(double));
-
-    // generate_data(n_samples, noise_factor, x, s);
-
-
     while (1) {
-        // for(int i=0; i<ONE_CYCLE; i++) {
-            uint32_t start_ms = HAL_GetTick();
 
+            // wrong inputs
             float *x = (float*)malloc(n_samples * sizeof(float));
             float *s = (float*)malloc(n_samples * sizeof(float));
 
             generate_data(n_samples, noise_factor, x, s);
 
+            uint32_t start_ms = HAL_GetTick();
 
-            // float x = (float) i / ONE_CYCLE * PI;
             input->data.f[0] = *x;
 
             if (interpreter->Invoke() != kTfLiteOk) {
@@ -117,10 +102,9 @@ int main(void) {
                 continue;
             }
             float y = output->data.f[0];
-
-            UART_printf("Restored value:", y, (uint32_t)HAL_GetTick() - start_ms);
+            uint32_t inf_time = (uint32_t)HAL_GetTick() - start_ms;
+            UART_printf("Restored value:", y, inf_time);
             free(x);
             free(s);
-        // }
     }
 }
