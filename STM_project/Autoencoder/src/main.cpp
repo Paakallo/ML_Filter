@@ -64,8 +64,8 @@ int main(void) {
     float s[n_samples];
     float y[n_samples];
 
+    uint32_t inf_time;
     while (1) {
-        uint32_t win_start = HAL_GetTick(); 
         // generate data window
         for (int i = 0; i < n_samples; i++){
             float u1 = (rand() + 1.0) / (RAND_MAX + 1.0);
@@ -93,6 +93,8 @@ int main(void) {
         uint32_t inf_time = (uint32_t)HAL_GetTick() - start_ms;
         
         for (int i = 0; i < n_samples; i++){
+            UART_printf("%f \n", x[i]);
+            UART_printf("%f \n", s[i]);
             UART_printf("%f \n", y[i]);
         }
     }

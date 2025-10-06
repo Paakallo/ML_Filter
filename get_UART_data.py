@@ -8,32 +8,38 @@ baudrate = 115200
 conn = serial.Serial(port=port_name,baudrate=baudrate)
 
 # conn.open()
-data = []
+input_data = []
+ideal_data = []
+rec_data = []
+
 try:
+    i = 0
     while True:
         if conn.in_waiting > 0:
             line = conn.readline().decode("utf-8").strip()
-            # try:
-            #     value = int(line)
-            #     print(f"Received int: {value}")
-            # except ValueError:
-            #     print(f"Non-integer received: {line}")
+            i+=1
             print(line)
-            data.append(line)
+            if i == 1:
+                input_data.append(line)
+            elif i == 2:
+                ideal_data.append(line)
+            elif i == 3:
+                rec_data.append(line)
+                i = 0
 except KeyboardInterrupt:
     print("\nStopping.")
 finally:
     conn.close()
 
-with open("STM_data.txt", 'w') as file:
-    for val in data:
+with open("rec_data.txt", 'w') as file:
+    for val in rec_data:
         file.write(f"{val}\n")
 
+with open("ideal_data.txt", 'w') as file:
+    for val in ideal_data:
+        file.write(f"{val}\n")
 
-# plt.plot(data)
-# plt.xlabel("Sample index")
-# plt.ylabel("Value")
-# plt.title("Signal from STM_data.txt")
-# plt.legend()
-# plt.grid(True)
-# plt.show()
+with open("input_data.txt", 'w') as file:
+    for val in input_data:
+        file.write(f"{val}\n")
+
