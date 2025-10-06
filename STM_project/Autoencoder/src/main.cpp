@@ -2,7 +2,7 @@
 
 #define PI                  2.f * 3.14159265359f
 
-#define TENSOR_ARENA_SIZE   120 * 1024
+#define TENSOR_ARENA_SIZE   100 * 1024
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -44,7 +44,7 @@ int main(void) {
     resolver.AddConv2D();
     
     // Keep aligned to 16 bytes for CMSIS
-    alignas(16) uint8_t tensor_arena[TENSOR_ARENA_SIZE];
+    alignas(16) static uint8_t tensor_arena[TENSOR_ARENA_SIZE];
 
     tflite::MicroInterpreter static_interpreter(model, resolver, tensor_arena, TENSOR_ARENA_SIZE);
     tflite::MicroInterpreter* interpreter = &static_interpreter;
@@ -62,33 +62,38 @@ int main(void) {
 
     float x[n_samples];
     float s[n_samples];
+    float y[n_samples];
+
     while (1) {
-            uint32_t win_start = HAL_GetTick(); 
-            // generate data window
-            for (int i = 0; i < n_samples; i++){
-                float u1 = (rand() + 1.0) / (RAND_MAX + 1.0);
-                float u2 = (rand() + 1.0) / (RAND_MAX + 1.0);
-                float g_num = sqrt(-2.0 * log(u1)) * cos(2.0 * M_PI * u2);
-                
-                float t = (float)i / (n_samples - 1);
-                s[i] = sin(2.0 * M_PI * t);
-                float n = noise_factor * g_num;
-                x[i] = s[i] + n; 
+        uint32_t win_start = HAL_GetTick(); 
+        // generate data window
+        for (int i = 0; i < n_samples; i++){
+            float u1 = (rand() + 1.0) / (RAND_MAX + 1.0);
+            float u2 = (rand() + 1.0) / (RAND_MAX + 1.0);
+            float g_num = sqrt(-2.0 * log(u1)) * cos(2.0 * M_PI * u2);
             
+            float t = (float)i / (n_samples - 1);
+            s[i] = sin(2.0 * M_PI * t);
+            float n = noise_factor * g_num;
+            x[i] = s[i] + n; 
 
-                uint32_t start_ms = HAL_GetTick();
-
-                input->data.f[0] = x[i];
-
-                if (interpreter->Invoke() != kTfLiteOk) {
-                    UART_printf("Failed to invoke for (%d)", x);
-                    continue;
-                }
-                float y = output->data.f[0];
-                uint32_t inf_time = (uint32_t)HAL_GetTick() - start_ms;
-                UART_printf("Restored value:", y, inf_time);
-            }
-            uint32_t win_stop = (uint32_t)HAL_GetTick() - win_start;
-            UART_printf("Window inference time: ", win_stop);
+            input->data.f[i] = x[i];
         }
+
+        uint32_t start_ms = HAL_GetTick();
+        if (interpreter->Invoke() != kTfLiteOk) {
+            UART_printf("Failed to invoke for (%d)", x);
+            break;
+        }
+
+        for (int i = 0; i < n_samples; i++){
+            y[i] = output->data.f[i];
+        }
+
+        uint32_t inf_time = (uint32_t)HAL_GetTick() - start_ms;
+        
+        for (int i = 0; i < n_samples; i++){
+            UART_printf("%f \n", y[i]);
+        }
+    }
 }
