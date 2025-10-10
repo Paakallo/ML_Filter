@@ -5,27 +5,30 @@ import matplotlib.pyplot as plt
 port_name = "/dev/ttyUSB0"
 baudrate = 115200
 
-conn = serial.Serial(port=port_name,baudrate=baudrate)
+conn = serial.Serial(port=port_name,baudrate=baudrate, timeout=1)
 
 # conn.open()
 input_data = []
+inf_time = []
 ideal_data = []
 rec_data = []
 
 try:
-    i = 0
     while True:
         if conn.in_waiting > 0:
             line = conn.readline().decode("utf-8").strip()
-            i+=1
             print(line)
-            if i == 1:
-                input_data.append(line)
-            elif i == 2:
-                ideal_data.append(line)
-            elif i == 3:
-                rec_data.append(line)
-                i = 0
+            name = line.split(":")[0].strip()
+            number = float(line.split(":")[1].strip())
+            if name == "Noise":        
+                input_data.append(number)
+            if name == "Ideal":
+                ideal_data.append(number)
+            if name == "Output":
+                rec_data.append(number)
+            if name == "Inf_time":
+                inf_time.append(number)
+
 except KeyboardInterrupt:
     print("\nStopping.")
 finally:
@@ -35,11 +38,14 @@ with open("rec_data.txt", 'w') as file:
     for val in rec_data:
         file.write(f"{val}\n")
 
-with open("ideal_data.txt", 'w') as file:
-    for val in ideal_data:
+with open("inf_time.txt", 'w') as file:
+    for val in inf_time:
         file.write(f"{val}\n")
 
 with open("input_data.txt", 'w') as file:
     for val in input_data:
         file.write(f"{val}\n")
 
+with open("ideal_data.txt", 'w') as file:
+    for val in ideal_data:
+        file.write(f"{val}\n")
