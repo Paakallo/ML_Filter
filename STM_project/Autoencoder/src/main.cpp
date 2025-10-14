@@ -19,6 +19,7 @@
 #include "conv_downsize.h"
 #include "neural_filter.h"
 #include "best_sequence_model.h"
+#include "mid_sequence_model.h"
 #include "quantized.h"
 #include "sine_model.h"
 
@@ -34,7 +35,8 @@ int main(void) {
     // const tflite::Model* model = tflite::GetModel(adaptive_filter);
     // const tflite::Model* model = tflite::GetModel(neural_filter);
     // const tflite::Model* model = tflite::GetModel(conv_downsize);
-    const tflite::Model* model = tflite::GetModel(best_sequence_model);
+    // const tflite::Model* model = tflite::GetModel(best_sequence_model);
+    const tflite::Model* model = tflite::GetModel(mid_sequence_model);
     // const tflite::Model* model = tflite::GetModel(quantized);
     // const tflite::Model* model = tflite::GetModel(sine_model);
     if (model->version() != TFLITE_SCHEMA_VERSION) {
